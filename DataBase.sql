@@ -3,7 +3,7 @@ create database if not exists Apuntes;
 use Apuntes;
 
 
-    --    AÑ    --
+    --    AÑO    --
 create table ANIO (
     idAnio    int(11)   not null,
     anio      char(9)   default(null)
