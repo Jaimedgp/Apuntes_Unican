@@ -8,7 +8,7 @@ create table ANIO (
     idAnio    int(11)   not null,
     anio      char(9)   default(null),
 
-		primary key (idAnio)
+    primary key (idAnio)
 );
 
 
@@ -25,11 +25,11 @@ create table DOCUMENTOS (
     comentario    varchar(300)  not null,
     asignatura    int(11)       not null,
 
-		primary key   (idApuntes),
-		foreign key   (usuario)     references  USUARIO(idUsuario),
-		foreign key   (tipo)        references  TIPO(idTipo),
-		foreign key   (anio)        references  ANIO(idAnio),
-		foreign key   (asignatura)  references  ASIGNATURA(idAsignatura)
+    primary key   (idApuntes),
+    foreign key   (usuario)     references  USUARIO(idUsuario),
+    foreign key   (tipo)        references  TIPO(idTipo),
+    foreign key   (anio)        references  ANIO(idAnio),
+    foreign key   (asignatura)  references  ASIGNATURA(idAsignatura)
 
 );
 
@@ -42,8 +42,8 @@ create table ASIGNATURA (
     estudios        int(11)         not null,
     curso           int(1)         not null,
 
-		primary key    (idAsigantura),
-		foreign key    (estudios)        references ESTUDIOS(idEstudios) 
+    primary key    (idAsigantura),
+    foreign key    (estudios)        references ESTUDIOS(idEstudios) 
 );
 
 
@@ -58,7 +58,7 @@ create table COMENTARIOS (
     Pseudonimo      char(12),
 
     primary key    (idComentarios),
-		foreign key    (idUsuario)      references  USUARIO(idUsuario),
+    foreign key    (idUsuario)      references  USUARIO(idUsuario),
     foreign key    (idDocumento)    references  DOCUMENTOS(idDocumento),
 
     unique key usr_apunt (idUsuario, idApuntes),
@@ -71,7 +71,7 @@ create table ESTUDIOS (
     idEstudios    int(11)        not null,
     nombre        varchar(12)    not null,
 
-		primary key (idEstudios)
+    primary key (idEstudios)
 );
 
 
@@ -80,8 +80,8 @@ create table SESION (
     idSesion    int(11),
     idUsuario   int(11),
 
-		primary key    (idSesion),
-		foreign key    (idUsuario)  references  USUARIO(idUsuario)
+    primary key    (idSesion),
+    foreign key    (idUsuario)  references  USUARIO(idUsuario)
 );
 
 
@@ -90,7 +90,7 @@ create table TIPO (
     idTipo    int(11),
     nombre    varchar(12),
 
-		primary key (idTipo)
+    primary key (idTipo)
 );
 
 
@@ -104,7 +104,7 @@ create table USUARIO (
     nick            varchar(20),
     email           varchar(50),
 
-		primary key (idUsuario)
+    primary key (idUsuario)
 );
 
 
@@ -113,5 +113,5 @@ create table INVITACION (
     idCodigo    int(11),
     codigo      char(12),
 
-		primary key (idCodigo)
+    primary key (idCodigo)
 );
