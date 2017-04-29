@@ -18,19 +18,39 @@ insert into DOCUMENTOS (idApuntes, titulo                           , usuario, f
                                                                                                                                                                  jodido, pero jodido de verdad', 2         )
 ;
 
+insert into ASIGNATURA (idAsignatura, codigo  , nombre                                                       , estudios, curso)
+                values (1           , 'G53'   , 'Termodinámica'                                              , 0       , 2    ),
+                values (2           , 'G51'   , 'Electricidad y magnetismo'                                  , 0       , 2    ),
+                values (3           , 'G55'   , 'Física Cuántica y Estructura de la Materia I: Fundamentales', 0       , 2    ),
+                values (4           , 'G1722' , 'Habilidades, Valores y Competencias Transversales'          , 0       , 2    ),
+                values (5           , 'G62'   , 'Laboratorio de Física I'                                    , 0       , 2    ),
+                values (6           , 'G63'   , 'Laboratorio de Física II'                                   , 0       , 2    ),
+                values (7           , 'G49'   , 'Mecánica Clásica y Relatividad'                             , 0       , 2    ),
+                values (8           , 'G59'   , 'Ecuaciones Diferenciales Ordinarias'                        , 0       , 2    ),
+                values (9           , 'G60'   , 'Ecuaciones Derivadas Parciales'                             , 0       , 2    ),
+                values (10          , 'G261'  , 'Inglés'                                                     , 0       , 2    )
+;
+
 insert into ESTUDIOS (idEstudios, nombre                  )
               values (0         , 'Fisica'                ),
               values (1         , 'Matematicas'           ),
               values (2         , 'Ingenieria Informatica')
 ;
 
-insert into SESION (idSesion, idUsuario)
-            values ('0a5ff911d3af9823ba2d50d77b6a6595', 1),
-            values ('8f7a2b3dddcf0ad39a4875f62a97907f', 8)
+insert into SESION (idSesion                          , idUsuario)
+            values ('0a5ff911d3af9823ba2d50d77b6a6595', 1        ),
+            values ('8f7a2b3dddcf0ad39a4875f62a97907f', 8        )
 ;
 
 insert into TIPO (idTipo, nombre          )
           values (0     , 'Apuntes'       ),
           values (1     , 'Examen Parcial'),
           values (2     , 'Examen Final'  )
+;
+
+insert into USUARIO (idUsuario, nombre , apellido1 , apellido2       , password                          , nick       , email                       )
+             values (1        , 'David', 'Iglesias', 'Sánchez'       , '451d8bb9214d5cf16d1f22e5cbeb0ad2', 'Pelu'     , 'davidiglesanchez@gmail.com'),
+             values (2        , 'Jaime', 'Díez'    , 'González-Pardo', '81dc9bdb52d04dc20036dbd8313ed055', 'Jaimedgp' , 'davidiglesanchez@gmail.com'),
+             values (7        , 'David', 'Iglesias', 'Sánchez'       , '451d8bb9214d5cf16d1f22e5cbeb0ad2', 'davidigle', 'davidiglesanchez@gmail.com'),
+             values (8        , 'David', 'Iglesias', 'Sánchez'       , '451d8bb9214d5cf16d1f22e5cbeb0ad2', 'david'    , 'davidiglesanchez@gmail.com')
 ;
