@@ -8,7 +8,9 @@ create table ANIO (
     idAnio    int(11)   not null,
     anio      char(9)   default(null),
 
-    primary key (idAnio)
+    primary key (idAnio),
+
+		unique (anio)
 );
 
 
@@ -29,7 +31,9 @@ create table DOCUMENTOS (
     foreign key   (usuario)     references  USUARIO(idUsuario),
     foreign key   (tipo)        references  TIPO(idTipo),
     foreign key   (anio)        references  ANIO(idAnio),
-    foreign key   (asignatura)  references  ASIGNATURA(idAsignatura)
+    foreign key   (asignatura)  references  ASIGNATURA(idAsignatura),
+
+		unique (hash)
 
 );
 
@@ -43,7 +47,9 @@ create table ASIGNATURA (
     curso           int(1)         not null,
 
     primary key    (idAsigantura),
-    foreign key    (estudios)        references ESTUDIOS(idEstudios) 
+    foreign key    (estudios)        references ESTUDIOS(idEstudios),
+
+		unique (codigo)
 );
 
 
@@ -61,8 +67,8 @@ create table COMENTARIOS (
     foreign key    (idUsuario)      references  USUARIO(idUsuario),
     foreign key    (idDocumento)    references  DOCUMENTOS(idDocumento),
 
-    unique key usr_apunt (idUsuario, idApuntes),
-    unique key apunt_pseu (idApunte, pseudonimo)
+    constraint usr_apunt  unique (idUsuario, idApuntes ),
+    constraint apunt_pseu unique (idApunte , pseudonimo)
 );
 
 
