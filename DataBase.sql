@@ -10,7 +10,7 @@ create table ANIO (
 
     primary key (idAnio),
 
-		unique (anio)
+    unique (anio)
 );
 
 
@@ -33,7 +33,7 @@ create table DOCUMENTOS (
     foreign key   (anio)        references  ANIO(idAnio),
     foreign key   (asignatura)  references  ASIGNATURA(idAsignatura),
 
-		unique (hash)
+    unique (hash)
 
 );
 
@@ -49,7 +49,7 @@ create table ASIGNATURA (
     primary key    (idAsigantura),
     foreign key    (estudios)        references ESTUDIOS(idEstudios),
 
-		unique (codigo)
+    unique (codigo)
 );
 
 
