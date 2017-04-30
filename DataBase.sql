@@ -6,7 +6,7 @@ use Apuntes;
     --    AÑO    --
 create table ANIO (
     idAnio    int(11)   not null,
-    anio      char(9)   default(null),
+    anio      char(9),
 
     primary key (idAnio),
 
@@ -18,7 +18,7 @@ create table ANIO (
 create table DOCUMENTOS (
     idDocumento   int(11)       not null,
     titulo        varchar(50)   not null,
-    usuario       int(11)       default null,
+    usuario       int(11),
     fechaSubida   datetime      default current_timestamp,
     tipo          int(11)       not null,
     anio          int(11)       not null,
@@ -44,7 +44,7 @@ create table ASIGNATURA (
     codigo          varchar(10)     not null,
     nombre          varchar(100)    not null,
     estudios        int(11)         not null,
-    curso           int(1)         not null,
+    curso           int(1)          not null,
 
     primary key    (idAsigantura),
     foreign key    (estudios)        references ESTUDIOS(idEstudios),
@@ -83,8 +83,8 @@ create table ESTUDIOS (
 
     --   SESION    --
 create table SESION (
-    idSesion    int(11),
-    idUsuario   int(11),
+    idSesion    int(11)    not null,
+    idUsuario   int(11)    not null,
 
     primary key    (idSesion),
     foreign key    (idUsuario)  references  USUARIO(idUsuario)
@@ -93,8 +93,8 @@ create table SESION (
 
     --   TIPO    --
 create table TIPO (
-    idTipo    int(11),
-    nombre    varchar(12),
+    idTipo    int(11)        not null,
+    nombre    varchar(12)    not null,
 
     primary key (idTipo)
 );
@@ -103,21 +103,24 @@ create table TIPO (
     --   USUARIO    --
 create table USUARIO (
     idUsuario       int(11),
-    nombre          varchar(30),
-    apellido1       varchar(30),
-    apellido2       varchar(30)     default null,
-    password        varchar(34),
-    nick            varchar(20),
-    email           varchar(50),
+    nombre          varchar(30)    not null,
+    apellido1       varchar(30)    not null,
+    apellido2       varchar(30),
+    password        varchar(34)    not null,
+    nick            varchar(20)    not null,
+    email           varchar(50)    not null,
 
-    primary key (idUsuario)
+    primary key (idUsuario),
+
+		unique (nick),
+		unique (nombre, apellido1, apellido2)
 );
 
 
     --   INVITACION    --
 create table INVITACION (
     idCodigo    int(11),
-    codigo      char(12),
+    codigo      char(12)    not null,
 
     primary key (idCodigo)
 );
