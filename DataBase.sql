@@ -66,8 +66,8 @@ create table USUARIO (
     puntuación      float,
     estudios        int(11),
 
+    unique (email),
     unique (nick),
-    unique (nombre, apellido1, apellido2),
 
     primary key    (idUsuario),
     foreign key    (estudios)   references  ESTUDIOS(idEstudios)
@@ -97,6 +97,8 @@ create table DOCUMENTOS (
     asignatura    int(11)       not null,
     comentario    varchar(300),
     puntuacion    float,
+    fechadescat   datetime      null,
+
 
     unique (hash),
 
@@ -110,7 +112,6 @@ create table DOCUMENTOS (
 
     --   COMENTARIOS    --
 create table COMENTARIOS (
-    idComentario    int(11),
     idUsuario       int(11),
     idDocumento     int(11),
     puntuacion      float,
@@ -118,12 +119,9 @@ create table COMENTARIOS (
     fecha           date,
     pseudonimo      char(12),
 
-    primary key    (idComentario),
+    primary key    (idUsuario, idDocumento),
     foreign key    (idUsuario)      references  USUARIO(idUsuario),
     foreign key    (idDocumento)    references  DOCUMENTOS(idDocumento),
 
-    constraint usr_apunt  unique (idUsuario, idDocumento),
-    constraint apunt_pseu unique (idDocumento , pseudonimo),
-
-    check (puntuacion < 5.0)
+    constraint apunt_pseu unique (idDocumento , pseudonimo)
 );
