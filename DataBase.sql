@@ -37,8 +37,6 @@ create table TIPO (
     idTipo    int            not null,
     nombre    varchar(12)    not null,
 
-    constraint chk_nombre CHECK (nombre in ('Apuntes', 'Apuntes Profesor', 'Examenes')),
-
     primary key (idTipo)
 );
 
