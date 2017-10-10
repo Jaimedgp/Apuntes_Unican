@@ -1,0 +1,62 @@
+html, body {
+height:100%;
+}
+
+body {
+background: #EEEEFF;
+font-family:Arial;
+margin: 0 auto;
+font-size:16px;
+display:table;
+}
+
+#contenedor {
+height:100%;
+display:table-cell;
+vertical-align: middle;
+}
+
+#login {
+min-width:100px;
+height:auto;
+margin-top:-100px;
+padding:50px 20px 50px 20px;
+background:#FEFEFE;
+overflow:hidden;
+border-radius: 10px;
+border:1px solid #AAAAAA;
+}
+
+#login #saludo{
+text-align:center;
+margin-left: auto;
+    margin-right: auto;
+    font-size:20px;
+}
+
+#login table{
+margin-left: auto;
+    margin-right: auto;
+    font-size:20px;
+}
+
+#login input{
+width:200px;
+border:1px solid #CCCCCC;
+    font-size:20px;
+}
+
+#login #entrar{
+cursor:pointer;
+}
+
+#login #info{
+display: inline-block;
+width:200px;
+word-wrap: break-word;
+}
+
+a {
+color:#0000EE;
+text-decoration:none;
+}
