@@ -33,6 +33,8 @@ require_once("DB.php");
 require_once("utiles.php");
 $USERINFO = array();
 
+session_start();
+
 /**
 Functión:	haEntrado()
 	Retorna true si el usuario ha entrado o false en cualquier otro caso.
@@ -40,16 +42,16 @@ Functión:	haEntrado()
 	Busca si existe una sesión con la cookie.
 */
 function haEntrado(){
-	if(!isset($_COOKIE["usersession"])){ return false;}
-	$usersession = $_COOKIE["usersession"];
+	if(!isset($_SESSION["usersession"])){ return false;}
+	$usersession = $_SESSION["usersession"];
 
 
 	//echo "User = ".."<br>";
 	$DB = sql_connect();
 	if($oracionSesion = $DB->prepare("SELECT IdUsuario FROM Sesion WHERE IdSesion=?")){
 
-		if(!$oracionSesion->bindParam(1, $usersession)){return "0";}
-		if(!$oracionSesion->execute()){return "0";}
+		if(!$oracionSesion->bindParam(1, $usersession)){$DB = null;return "0";}
+		if(!$oracionSesion->execute()){$DB = null;return "0";}
 		
 		
 		
@@ -58,13 +60,13 @@ function haEntrado(){
 
 			$idUsuario = $filaSesion->IdUsuario;
 
-			setcookie("usersession", $usersession, time()+3600);
-			if($oracion = $DB->prepare("SELECT IdUsuario, Nombre, Apellido1, Apellido2, Nick, Email FROM Usuario WHERE IdUsuario=?")){
+			if($oracion = $DB->prepare("SELECT IdUsuario, Nombre, Apellido1, Apellido2, Nick, Email FROM Usuario WHERE IdUsuario=? AND Activo=1")){
 				$oracion->bindParam(1, $idUsuario);
 				$oracion->execute();
 				if($oracion->rowCount()>0){
 
 					$GLOBALS["USERINFO"] = $oracion->fetchObject();
+					$DB = null;
 					return true;
 				}
 			}
@@ -73,7 +75,7 @@ function haEntrado(){
 
 	}
 
-
+	$DB = null;
 	return false;
 }
 
@@ -107,7 +109,8 @@ function informacionUsuario(){
  */
 function entrada($user, $pass){
 	$DB = sql_connect();
-	if($oracion = $DB->prepare("SELECT IdUsuario, Email, Apellido1, Apellido2 FROM Usuario WHERE Nick=? AND Password=?")){
+	if($oracion = $DB->prepare("SELECT IdUsuario FROM Usuario WHERE Nick=? AND Password=? AND Activo=1")){
+		$pass=md5($pass);
 		$oracion->bindParam(1, $user, PDO::PARAM_STR);
 		$oracion->bindParam(2, $pass, PDO::PARAM_STR);
 		$oracion->execute();
@@ -115,32 +118,37 @@ function entrada($user, $pass){
 				$fila = $oracion->fetchObject();
 
 
-				$usersession = generarCodigoSecreto($fila->Email.$fila->IdUsuario.$fila->Apellido2.$fila->Apellido1.$pass);
+				$usersession = generarCodigoSecreto($fila->IdUsuario.$pass);
 
 				//Eliminamos si existe una sesion anterior en la base de datos
 				$DB->query("DELETE FROM Sesion WHERE IdUsuario=".$fila->IdUsuario);
 
 
-				if($oracionSesion = $DB->prepare("INSERT INTO Sesion(IdSesion, IdUsuario) VALUES(?, ?)")){
+				if($oracionSesion = $DB->prepare("INSERT INTO Sesion(IdSesion, IdUsuario, Fecha) VALUES(?, ?, CURRENT_TIMESTAMP)")){
 
 					if(!$oracionSesion->bindParam(1, $usersession, PDO::PARAM_STR)){return "0";}
 					if(!$oracionSesion->bindParam(2, $fila->IdUsuario, PDO::PARAM_INT)){return "0";}
 					if(!$oracionSesion->execute()){return "0";}
 
-					setcookie("usersession", $usersession, time()+3600);
+					$_SESSION["usersession"]=$usersession;
+					$DB = null;
 					return "1";
 				}else{
+					$DB = null;
 					return "Error";
 				}
 			}else{
 				sleep(2);// Amortiguamos en caso de un envío masivo.
+				$DB = null;
 				return "0";
 			}
 
 	}else{
 		sleep(2);// Amortiguamos en caso de un envío masivo.
+		$DB = null;
 		return "0";
 	}
+	$DB = null;
 }
 
 /**
@@ -148,44 +156,41 @@ function entrada($user, $pass){
  *		Registra a un usuario en el sistema.
  *		Argumentos: se le pasa en nombre, primer apellido, segundo apellido, el nick, la contraseña y el e-mail.	
  */
-function registro($name, $apellido1, $apellido2, $nick, $password, $email){
+function registro($nick, $password){
 
 	sleep(2); // Amortiguamos en caso de un envío masivo.
-	if(isset($name) && isset($apellido1) && isset($apellido2) && isset($nick) && isset($password) && isset($email)){
+	if(isset($nick) && isset($password)){
 		$DB = sql_connect();
-		if($oracion = $DB->prepare("SELECT Nick, Email FROM Usuario WHERE Nick=? OR Email=?")){
+		if($oracion = $DB->prepare("SELECT Nick FROM Usuario WHERE Nick=?")){
 			$oracion->bindParam(1, $nick);
-			$oracion->bindParam(2, $email);
 			$oracion->execute();
 			
 			if($oracion->rowCount()>0){ // If Nick or Email Exists!
-				while($fila = $oracion->fetchObject()){
-					if($fila->Nick == $nick){return 3;}
-					if($fila->Email == $email){return 4;}
+				if($fila = $oracion->fetchObject()){
+					return 3;
 				}
 				
 			}else{
-				if($oracionNum = $DB->prepare("SELECT COUNT(*) AS num FROM Usuario")){
+				if($oracionNum = $DB->prepare("SELECT MAX(IdUsuario)+1 AS num FROM Usuario")){
 					if($oracionNum->execute()){
 						$filaNum = $oracionNum->fetchObject();
 						$IdUsuario = $filaNum->num;
 					}else{
+						$DB = null;
 						return 5;
 					}
 
 				}
-				if($oracion = $DB->prepare("INSERT INTO `Usuario` (`IdUsuario`, `Nombre`, `Apellido1`, `Apellido2`, `Password`, `Nick`, `Email`) VALUES(?, ?, ?, ?, ?, ?, ?)")){
+				if($oracion = $DB->prepare("INSERT INTO `Usuario` (`IdUsuario`, `Nombre`, `Apellido1`, `Apellido2`, `Password`, `Nick`, `Email`, `Activo`) VALUES(?, 'x', 'x', 'x', ?, ?, 'x',1)")){
 					$oracion->bindParam(1, $IdUsuario, PDO::PARAM_INT);
-					$oracion->bindParam(2, $name, PDO::PARAM_STR);
-					$oracion->bindParam(3, $apellido1, PDO::PARAM_STR);
-					$oracion->bindParam(4, $apellido2, PDO::PARAM_STR);
-					$oracion->bindParam(5, $password, PDO::PARAM_STR);
-					$oracion->bindParam(6, $nick, PDO::PARAM_STR);
-					$oracion->bindParam(7, $email, PDO::PARAM_STR);
+					$oracion->bindParam(2, $password, PDO::PARAM_STR);
+					$oracion->bindParam(3, $nick, PDO::PARAM_STR);
 					if($oracion->execute()){
+						$DB = null;
 						return 1;
 
 					}else{
+						$DB = null;
 						return 5;
 					}
 				}
@@ -194,7 +199,7 @@ function registro($name, $apellido1, $apellido2, $nick, $password, $email){
 
 		}
 
-			
+		$DB = null;	
 	}else{
 		return 2;
 	}
@@ -206,16 +211,16 @@ function registro($name, $apellido1, $apellido2, $nick, $password, $email){
  */
 function salir(){
 	$DB = sql_connect();
-	if(isset($_COOKIE["usersession"])){
+	if(isset($_SESSION["usersession"])){
 		if($oracion = $DB->prepare("DELETE FROM Sesion WHERE idSesion=?")){
-			$oracion->bindParam(1, $_COOKIE["usersession"], PDO::PARAM_STR);
+			$oracion->bindParam(1, $_SESSION["usersession"], PDO::PARAM_STR);
 			if($oracion->execute()){ return true;
 				
-	    		setcookie('usersession', '', time()-1000, '/');
-	    		unset($_COOKIE["usersession"]);
+	    		$_SESSION["usersession"]=null;
 			}
 		}
 	}
+	$DB = null;
 	return false;
 }
 ?>

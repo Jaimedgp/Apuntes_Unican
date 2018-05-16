@@ -17,7 +17,7 @@ if(haEntrado()){
 	
 	$DB = sql_connect();
 	
-		if(!$noEncontrado && $oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Tipo.IdTipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.IdDocumento=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.Asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios")){
+		if(!$noEncontrado && $oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Tipo.IdTipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.IdDocumento=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.Asignatura = Asignatura.IdAsignatura AND Documentos.Activo = 1 AND Asignatura.Estudios = Estudios.IdEstudios")){
 			
 			$oracion->bindParam(1, $idDocumento);
 			
@@ -47,7 +47,8 @@ if(haEntrado()){
 		<link rel="stylesheet" href="css/documentos.css">
 		<style type="text/css">
 			body {
-				background:#EEEEFF;
+				background:#8698A8;
+				font-family:Arial;
 				font-family:Arial;
 				font-size:16px;
 			}
@@ -57,8 +58,9 @@ if(haEntrado()){
 				left:0px;
 				right:0px;
 				height:50px;
-				background:#FFFFFF;
-				border-bottom:1px solid #CCCCCC;
+				background:#293440;
+				border-bottom:1px solid #000;
+				color:#FFF;
 
 			}
 
@@ -69,7 +71,6 @@ if(haEntrado()){
 				bottom:5px;
 				width:auto;
 				min-width:50px;
-				color:#101020;
 			}
 
 			#header_center {
@@ -78,24 +79,22 @@ if(haEntrado()){
 				font-size:20px;
 				width:auto;
 				min-width:50px;
-				color:#101020;
 			}
 
 
 			#canvas {
 				position:absolute;
-				top:50px;
+				top:51px;
 				left:100px;
 				right:100px;
 				bottom:0px;
-				background:#FFFFFF;
+				background:rgba(255,255,255,0.9);
 				overflow-y:auto;
 				overflow-x:hidden;
-				border-top:1px solid #DDDDDD;
 			}
 
 			#canvas #preview {
-				background:#DDDDDD;
+				background:#000;
 				position:absolute;
 				top:0px;
 				left:0px;

@@ -4,12 +4,33 @@ require_once("utiles.php");
 require_once("sesion.php");
 require_once("captcha/captcha.php");
 
+if(isset($_GET["i"])){
+	$DB = sql_connect();
+	if($oracionSesion = $DB->prepare("SELECT IdCodigo FROM Invitacion WHERE BINARY Codigo=?")){
+
+		if(!$oracionSesion->bindParam(1, $_GET["i"], PDO::PARAM_STR)){return "0";}
+		if(!$oracionSesion->execute()){return "0";}
+		
+		
+		
+		if($oracionSesion->rowCount() > 0){
+			//Continua;
+		}else{
+			die("<h1>403 Forbidden.</h1>");
+		}
+
+	}
+	$DB=null;
+}else{
+	die("<h1>403 Forbidden.</h1>");
+}
+
 // Si se envía el formulario, lo registramos
 if(isset($_POST["enviado"])){
 
 	// Comprobamos el captcha
 	if(comprobarCaptcha($_POST["captcha"])){
-		$resultado = registro($_POST["name"], $_POST["apellido1"], $_POST["apellido2"], $_POST["nick"], $_POST["password"], $_POST["email"]);
+		$resultado = registro($_POST["nick"], $_POST["password"]);
 		switch($resultado){
 			case "1":
 				echo "OK";
@@ -20,9 +41,7 @@ if(isset($_POST["enviado"])){
 			case "3":
 				echo "Ya existe ese nick.";
 			break;
-			case "4":
-				echo "Ya existe un usuario con el mismo email.";
-			break;
+			default:
 			case "5":
 				echo "Hubo un error grave.";
 			break;
@@ -44,21 +63,14 @@ if(isset($_POST["enviado"])){
 
 		var withError = false;
 		var register = function(){
-			var name = document.getElementById("name");
-			var ap1 = document.getElementById("ap1");
-			var ap2 = document.getElementById("ap2");
 			var nick = document.getElementById("nick");
 			var pass1 = document.getElementById("passwd");
 			var pass2 = document.getElementById("passwd_repeat");
-			var email = document.getElementById("email");
 			var captchaText = document.getElementById("captchaText");
 			if(withError){
 				pass1.style.borderColor="#CCCCCC";
 				pass2.style.borderColor="#CCCCCC";
-				name.style.borderColor="#CCCCCC";
-				ap1.style.borderColor="#CCCCCC";
 				nick.style.borderColor="#CCCCCC";
-				email.style.borderColor="#CCCCCC";
 				withError = false;
 			}
 			//Check data
@@ -75,30 +87,10 @@ if(isset($_POST["enviado"])){
 				pass2.style.borderColor="#FF0000";
 				withError=true;
 			}
-			if(name.value == "" || name.value == null){ // If name is empty!
-				name.style.borderColor="#FF0000";
-				withError=true;
-			}
-
-			if(ap1.value == "" || ap1.value == null){ // If first name is empty!
-				ap1.style.borderColor="#FF0000";
-				withError=true;
-			}
 
 			if(nick.value == "" || nick.value == null){ // If nick name is empty!
 				nick.style.borderColor="#FF0000";
 				withError=true;
-			}
-
-			if(email.value == "" || email.value == null){ // If email is empty!
-				email.style.borderColor="#FF0000";
-				withError=true;
-			}else{ // Check if email is LIKE %
-				if(email.value.indexOf("\@")<1){ //Greater than 0 because there are not sense in first position!
-					email.style.borderColor="#FF0000";
-					withError=true;
-				}
-
 			}
 
 			if(captchaText.value== "" || captchaText.value == null){ // Si el captcha está vacío
@@ -109,14 +101,10 @@ if(isset($_POST["enviado"])){
 				document.getElementById("entrar").value ="Registrandose...";
 				//"u="+u+"&p="+md5(p)
 				var postHeader = "enviado=1";
-				postHeader += "&name="+name.value;
-				postHeader += "&apellido1="+ap1.value;
-				postHeader += "&apellido2="+ap2.value;
 				postHeader += "&nick="+nick.value;
 				postHeader += "&password="+md5(pass1.value);
-				postHeader += "&email="+email.value;
 				postHeader += "&captcha="+captchaText.value;
-				ajaxpost( "registro.php", postHeader,
+				ajaxpost( "registro.php?i=<?php echo $_GET["i"];?>", postHeader,
 					function(xhttp){
 						
 						if(xhttp.responseText.trim() == "OK"){
@@ -146,6 +134,10 @@ if(isset($_POST["enviado"])){
 					}
 				}
 			);
+			document.getElementById("acepto").addEventListener("change",
+				function(e){
+					document.getElementById("entrar").disabled=!document.getElementById("acepto").checked;
+				});
 		}
 		</script>
 		<script languaje="JavaScript" src="md5.js"></script>
@@ -157,15 +149,13 @@ if(isset($_POST["enviado"])){
 			<form id="form_register" method="get">
 			<table border="0">
 				<tr><td></td><td><span id="info"></span></td></tr>
-				<tr><td>Nombre:</td><td><input type="text" id="name"/></td></tr>
-				<tr><td>Primer apellido:</td><td><input type="text" id="ap1"/></td></tr>
-				<tr><td>Segundo apellido:</td><td><input type="text" id="ap2"/></td></tr>
 				<tr><td>Nick:</td><td><input type="text" id="nick"/></td></tr>
 				<tr><td>Contrase&ntilde;a:</td><td><input type="password" id="passwd"/></td></tr>
 				<tr><td>Repetir contrase&ntilde;a:</td><td><input type="password" id="passwd_repeat"/></td></tr>
-				<tr><td>Correo electr&oacute;nico:</td><td><input type="text" id="email"/></td></tr>
 				<tr><td><img id="captcha" src="captcha.php" alt="error"></td><td><input type="text" id="captchaText"/></td></tr>
-				<tr><td></td><td><input type="submit" id="entrar" value="Registrarse"/></td></tr>
+				<tr><td></td><td><input type="checkbox" name="checkbox" id="acepto" />He le&iacute;do, entiendo y <br>
+				acepto los <a href="tc.html" target="_blank">t&eacute;rminos y condiciones</a>.</td></tr>
+				<tr><td></td><td><input type="submit" id="entrar" value="Registrar" disabled></td></tr>
 			</table>
 			</form>
 			</div>

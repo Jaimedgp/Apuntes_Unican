@@ -2,7 +2,7 @@
 /************************************************************************************************************************************
  * 		Script: becario.php
  *			Escrito por David Iglesias Sánchez.
- *			Aplicación programada y diseñada por Jaime Diez Gonzalez-Pardo, Mariam Milad Fernández, Guillermo Pascual Cisneros.
+ *			Aplicación programada y diseñada por Jaime Diez Gonzalez-Pardo
  *
  *		Éste script es el encargado de enlazar las consultas de la base de datos con la página web (mediante AJAX).
  *		Se compone de las siguientes funciones:
@@ -29,6 +29,10 @@
 /**
 Incluir para manejar la base de datos
 */
+
+// Only ssl!
+if(empty($_SERVER['HTTPS'])){die("0");}
+
 require_once("configuracion.php");
 require_once("DB.php");
 require_once("utiles.php");
@@ -37,17 +41,17 @@ require_once("sesion.php");
 
 
 
+//Enviar la cabecera con la codificación utf-8 para evitar errores en los caracteres.
+header('Content-Type: text/html; charset=utf-8');
 
 
 
 //Comprobar si el usuario ha entrado al sistema
 if(!haEntrado()){
-	die("{\"Error\": true, \"ErrorCode\": 1}");
+	die("Err");
 }
 
 
-//Enviar la cabecera con la codificación utf-8 para evitar errores en los caracteres.
-header('Content-Type: text/html; charset=utf-8');
 
 /**
 Función: obtener_estudios
@@ -58,13 +62,12 @@ function obtener_estudios(){
 
 	if($puntero = $DB->query("SELECT IdEstudios, Nombre FROM Estudios")){
 		$i = $puntero->rowCount();
-		echo "{";
 		while($fila = $puntero->fetchObject()){
-			echo "\"".$fila->IdEstudios."\":\"".$fila->Nombre."\"\n,";
-
+			echo $fila->IdEstudios."|".$fila->Nombre."|";
 		}
-		echo " \"length\":".$puntero->rowCount()."}";
 	}
+	// Close the connection
+	$DB=null;
 
 }
 
@@ -79,21 +82,21 @@ function obtener_tipos(){
 			$oracion->bindParam(1, $_GET["tipo"]);
 			$oracion->execute();
 				if($fila = $oracion->fetchObject()){
-					echo "{\"Nombre\":\"".$fila->Nombre."\"}";
+					echo $fila->Nombre;
 				}
 	
 		}
 	}else{
 		if($oracion = $DB->query("SELECT IdTipo, Nombre FROM Tipo")){
 			$i = $oracion->rowCount();
-			echo "{";
 			while($fila = $oracion->fetchObject()){
-				echo "\"".$fila->IdTipo."\":\"".$fila->Nombre."\"\n,";
+				echo $fila->IdTipo."|".$fila->Nombre."|";
 
 			}
-			echo " \"length\":".$oracion->rowCount()."}";
 		}
 	}
+	// Close the connection
+	$DB=null;
 }
 /**
 Función: obtener_cursos
@@ -104,13 +107,13 @@ function obtener_cursos(){
 
 	if($puntero = $DB->query("SELECT IdAnio, Anio FROM Anio")){
 		$i = $puntero->rowCount();
-		echo "{";
 		while($fila = $puntero->fetchObject()){
-			echo "\"".$fila->IdAnio."\":\"".$fila->Anio."\"\n,";
+			echo $fila->IdAnio."|".$fila->Anio."|";
 
 		}
-		echo " \"length\":".$puntero->rowCount()."}";
 	}
+	// Close the connection
+	$DB=null;
 }
 
 /**
@@ -125,12 +128,12 @@ function puntos(){
 		$oracion->bindParam(1, $idUsuario);
 		$oracion->execute();
 			if($fila = $oracion->fetchObject()){
-				echo "{\"length\": \"1\", \"Puntos\": \"".$fila->puntos."\"}";
+				echo $fila->puntos;
 				return ;
 			}
 	}
-	json_void();
-	
+	// Close the connection
+	$DB=null;
 }
 
 /**
@@ -179,17 +182,13 @@ function obtener_asignaturas(){
 			$oracion->execute();
 
 				$i = 0;
-				echo "{";
-
 				while($fila = $oracion->fetchObject()){
-					echo "\"".($i++)."\":{ \"id\": \"".$fila->IdAsignatura."\", \"Codigo\": \"".$fila->Codigo."\", \"Nombre\" : \"".$fila->Codigo." ".$fila->Nombre."\", \"Curso\" :\"".$fila->Curso."\"";
-					echo "}\n,";
+					echo $fila->IdAsignatura."|".$fila->Nombre."|";
 
 				}
-				echo " \"length\":".$oracion->rowCount()."}";
-	
-
 	}
+	// Close the connection
+	$DB=null;
 
 }
 
@@ -202,19 +201,21 @@ function obtener_grados(){
 	$DB = sql_connect();
 	if($puntero = $DB->query("SELECT IdEstudios, Nombre FROM Estudios")){
 			$i = $puntero->rowCount();
-			echo "{";
 			while($fila = $puntero->fetchObject()){
-				echo "\"".$fila->IdEstudios."\":{ \"Nombre\": \"".$fila->Nombre."\"";
-				echo "}\n,";
+				echo $fila->IdEstudios."|".$fila->Nombre."|";
 
 			}
-			echo " \"length\":".$puntero->rowCount()."}";
 
 	}else{
 		json_void();
 	}
+	// Close the connection
+	$DB=null;
 }
 
+function obtener_anios(){
+	echo "1|Primero|2|Segundo|3|Tercero|4|Cuarto";
+}
 /**
 Función: filtrar_apuntes
 	Muestra los apuntes aplicandoles filtro de búsqueda.
@@ -222,110 +223,100 @@ Función: filtrar_apuntes
 function filtrar_apuntes(){
 	$DB = sql_connect();
 
-	$idAsignatura = isset($_GET["asignatura"]) ? $_GET["asignatura"] : "ALL";
-	$idCurso = isset($_GET["curso"]) ? $_GET["curso"] : "ALL";
-	$idGrado = isset($_GET["grado"]) ? $_GET["grado"] : "ALL";
+	$idAsignatura = isset($_GET["asignatura"]) ? $_GET["asignatura"] : "-1";
+	$idCurso = isset($_GET["curso"]) ? $_GET["curso"] : "-1";
+	$idGrado = isset($_GET["grado"]) ? $_GET["grado"] : "-1";
+	$idTipo = isset($_GET["tipo"]) ? $_GET["tipo"] : "-1";
 	$pagina  = isset($_GET["pagina"]) ? $_GET["pagina"] : 0;
 	$offset = $pagina*10; 
 
-	if($idAsignatura !== "ALL"){
+	if($idAsignatura !== "-1"){
 		
-		if($oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Documentos.Tipo AS IdTipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.Asignatura=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios ORDER BY FechaSubida, IdDocumento DESC LIMIT 10 OFFSET ?")){
+		$oracionSQL ="SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Documentos.Tipo AS IdTipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.Activo = 1 AND Documentos.Asignatura=? AND ";
+		
+		if($idTipo != "-1"){
+			$oracionSQL.="Tipo.IdTipo=? AND ";
+		}
 
-			$oracion->bindParam(1, $idAsignatura, PDO::PARAM_INT);
-			$oracion->bindParam(2, $offset, PDO::PARAM_INT);
+		$oracionSQL.="Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios ORDER BY FechaSubida, IdDocumento DESC LIMIT ?,11";
+
+		if($oracion = $DB->prepare($oracionSQL)){
+
+			$bindIndex=0;
+			$oracion->bindParam(++$bindIndex, $idAsignatura, PDO::PARAM_INT);
+			
+			if($idTipo !== "-1"){
+				$oracion->bindParam(++$bindIndex, $idTipo, PDO::PARAM_INT);
+			}
+
+			$oracion->bindParam(++$bindIndex, $offset, PDO::PARAM_INT);
+			
 			$oracion->execute();
 				$i=0;
-				echo "{";
-				while($fila = $oracion->fetchObject()){
-					echo "\"$i\":{";
-					echo '"Id":"'.$fila->IdDocumento.'",';
-					echo '"Titulo":"'.$fila->Titulo.'",';
-					echo '"Nick":"'.$fila->Nick.'",';
-					echo '"IdUsuario":"'.$fila->IdUsuario.'",';
-					echo '"Comentario":"'.$fila->Comentario.'",';
-					echo '"Fecha":"'.$fila->FechaSubida.'",';
-					echo '"Tipo":"'.$fila->Tipo.'",';
-					echo '"Curso":"'.$fila->Anio.'",';
-					echo '"Grado":"'.$fila->Grado.'",';
-					echo '"Documento":"'.$fila->Documento.'",';
-					echo '"Asignatura":"'.$fila->Asignatura.'",';
-					echo '"IdTipo":"'.$fila->IdTipo.'"';
-					echo "},";
+				while(($fila = $oracion->fetchObject())&&$i<10){
+					echo $fila->IdDocumento.'|'.$fila->Titulo.'|'.$fila->Nick.'|'.$fila->IdUsuario.'|'.$fila->Comentario.'|'.$fila->FechaSubida.'|'.$fila->Tipo.'|'.$fila->Anio.'|'.$fila->Grado.'|'.$fila->Asignatura.'|'.$fila->IdTipo.'|';
 					$i++;
-
 				}
-				echo "\"length\":".$oracion->rowCount()."}";
+
+				
+				if($i>=10){ echo "1|";}
+				elseif($i>0){echo "0|";}
+				if($i==0){json_void();}
 		}else{
 			json_void();
 		}
 	}else{
-		$oracionSQL = "SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado, Documentos.Tipo AS IdTipo FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE ";
-		if($idCurso !== "ALL"){
-			$oracionSQL .= "Asignatura.Curso=? AND ";
-		}
-		if($idGrado !== "ALL"){
-			$oracionSQL .= "Asignatura.Estudios=? AND ";
-		}
+		$oracionSQL = "SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado, Documentos.Tipo AS IdTipo FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.Activo = 1 AND ";
+			if($idCurso !== "-1"){
+				$oracionSQL .= "Asignatura.Curso=? AND ";
+			}
+			if($idGrado !== "-1"){
+				$oracionSQL .= "Asignatura.Estudios=? AND ";
+			}
+			if($idTipo !== "-1"){
+				$oracionSQL.="Tipo.IdTipo=? AND ";
+			}
 		 
 		 $oracionSQL .= "Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios ORDER BY Documentos.FechaSubida, IdDocumento DESC LIMIT 11 OFFSET ?";
 
 		if($oracion = $DB->prepare($oracionSQL)){
+
+
+		$bindIndex = 0;
+		if($idCurso !== "-1"){
+			$oracion->bindParam(++$bindIndex, $idCurso, PDO::PARAM_INT);
+		}
+		if($idGrado !== "-1"){
+			$oracion->bindParam(++$bindIndex, $idGrado, PDO::PARAM_INT);
+		}
+		if($idTipo !== "-1"){
+			$oracion->bindParam(++$bindIndex, $idTipo, PDO::PARAM_INT);
+		}
 			
-			
-
-		if($idCurso !== "ALL" && $idGrado !== "ALL"){
-			$oracion->bindParam(1, $idCurso, PDO::PARAM_INT);
-			$oracion->bindParam(2, $idGrado, PDO::PARAM_INT);
-			$oracion->bindParam(3, $offset, PDO::PARAM_INT);
-		}
-
-		if($idCurso !== "ALL" && $idGrado === "ALL"){
-			$oracion->bindParam(1, $idCurso, PDO::PARAM_INT);
-			$oracion->bindParam(2, $offset, PDO::PARAM_INT);
-		}
-
-		if($idCurso === "ALL" && $idGrado !== "ALL"){
-			$oracion->bindParam(1, $idGrado, PDO::PARAM_INT);
-			$oracion->bindParam(2, $offset, PDO::PARAM_INT);
-		}
-
-		if($idCurso === "ALL" && $idGrado === "ALL"){
-
-			$oracion->bindParam(1, $offset, PDO::PARAM_INT);
-
-		}
+		$oracion->bindParam(++$bindIndex, $offset, PDO::PARAM_INT);
 
 			$oracion->execute();
 				$i=0;
-				echo "{";
+
 				while(($fila = $oracion->fetchObject()) && $i<10){
-					echo "\"$i\":{";
-					echo '"Id":"'.$fila->IdDocumento.'",';
-					echo '"Titulo":"'.$fila->Titulo.'",';
-					echo '"Nick":"'.$fila->Nick.'",';
-					echo '"IdUsuario":"'.$fila->IdUsuario.'",';
-					echo '"Comentario":"'.$fila->Comentario.'",';
-					echo '"Fecha":"'.$fila->FechaSubida.'",';
-					echo '"Tipo":"'.$fila->Tipo.'",';
-					echo '"Curso":"'.$fila->Anio.'",';
-					echo '"Grado":"'.$fila->Grado.'",';
-					echo '"Documento":"'.$fila->Documento.'",';
-					echo '"Asignatura":"'.$fila->Asignatura.'",';
-					echo '"IdTipo":"'.$fila->IdTipo.'"';
-					echo "},";
+					echo $fila->IdDocumento.'|'.$fila->Titulo.'|'.$fila->Nick.'|'.$fila->IdUsuario.'|'.$fila->Comentario.'|'.$fila->FechaSubida.'|'.$fila->Tipo.'|'.$fila->Anio.'|'.$fila->Grado.'|'.$fila->Asignatura.'|'.$fila->IdTipo.'|';
 					$i++;
 
 				}
+				
+				if($i>=10){ echo "1|";}
+				elseif($i>0){echo "0|";}
+				if($i==0){json_void();}
 
-				if($i == 10){ echo "\"next\": \"true\",";}else{echo "\"next\": \"false\",";}
-				echo "\"length\":".$i."}";
 	
 		}else{
 			json_void();
 		}
 
 	}
+
+	// Close the connection
+	$DB=null;
 
 }
 
@@ -343,35 +334,37 @@ function buscar_texto(){
 
 	$query = $_GET["busqueda"];				// Texto de búsqueda
 
-	$tipo = $_GET["tipo"];					// Variable tipo: Si buscamos apuntes, examenes o ambos.
-
-	// Calculamos el OFFSET
+	$idAsignatura = isset($_GET["asignatura"]) ? $_GET["asignatura"] : "-1";
+	$idCurso = isset($_GET["curso"]) ? $_GET["curso"] : "-1";
+	$idGrado = isset($_GET["grado"]) ? $_GET["grado"] : "-1";
+	$idTipo = isset($_GET["tipo"]) ? $_GET["tipo"] : "-1";
 	$pagina  = isset($_GET["pagina"]) ? $_GET["pagina"] : 0;
-	$offset = $pagina*10;
+	$offset = $pagina*10; 
+
 
 	/**
 		A partir de éste punto, generamos la consulta SQL dependiendo de los datos recibidos.
 	*/
-	$oracionSQL = "SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documentos.Documento , Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado, Documentos.Tipo AS IdTipo FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE ( Documentos.Titulo LIKE ? OR Documentos.Comentario LIKE ? )AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios";
+	$oracionSQL = "SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documentos.Documento , Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado, Documentos.Tipo AS IdTipo FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE ( Documentos.Titulo LIKE ? OR Documentos.Comentario LIKE ? ) AND Documentos.Usuario = Usuario.IdUsuario AND Documentos.Activo = 1 AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND ";
 
-	/**
-		Dependiendo de la variable tipo, añadimos (o no) restricciones a la consulta SQL.
-	*/
-	switch($tipo){ 
-		case "1":
-			$oracionSQL .= " AND (Documentos.Tipo = 0 OR Documentos.Tipo = 1)";		//	Añadimos la restricción de que sean sólo Apuntes
-		break;
-		case "2":
-			$oracionSQL .= " AND Documentos.Tipo = 2";		//	Añadimos la restricción de que sean sólo Exámenes
-		break;
-		case "3":										// En éste caso no necesitamos ninguna restricción...
-		break;
-		default:
-			exit(); 									// Si no es ninguno de los valores, entonces puede haber inyección SQL (?)
-		break;
+	if($idAsignatura !== "-1"){
+		$oracionSQL .= "Documentos.asignatura=? AND ";
+	}else{
+
+		if($idCurso !== "-1"){
+			$oracionSQL .= "Asignatura.Curso=? AND ";
+		}
+		if($idGrado !== "-1"){
+			$oracionSQL .= "Asignatura.Estudios=? AND ";
+		}
+		
+	}
+	if($idTipo !== "-1"){
+		$oracionSQL.="Tipo.IdTipo=? AND ";
 	}
 
-	$oracionSQL .= " ORDER BY Documentos.FechaSubida, Documentos.IdDocumento LIMIT 10 OFFSET ?";
+
+	$oracionSQL .= "Asignatura.Estudios = Estudios.IdEstudios ORDER BY Documentos.FechaSubida, Documentos.IdDocumento LIMIT 11 OFFSET ?";
 	if($oracion = $DB->prepare($oracionSQL)){			// Si no hay ningún error al preparar la oración SQL
 
 			/**
@@ -396,37 +389,49 @@ function buscar_texto(){
 			}
 
 			// Añadimos las cadenas de texto a la consulta y el OFFSET
-			$oracion->bindParam(1, $query_bind, PDO::PARAM_STR);
-			$oracion->bindParam(2, $query_bind, PDO::PARAM_STR);
-			$oracion->bindParam(3, $offset, PDO::PARAM_INT);
+
+			$bindIndex = 0;
+
+			$oracion->bindParam(++$bindIndex, $query_bind, PDO::PARAM_STR);
+			$oracion->bindParam(++$bindIndex, $query_bind, PDO::PARAM_STR);
+
+			if($idAsignatura !== "-1"){
+				$oracion->bindParam(++$bindIndex, $idAsignatura, PDO::PARAM_INT);
+			}else{
+
+				if($idCurso !== "-1"){
+					$oracion->bindParam(++$bindIndex, $idCurso, PDO::PARAM_INT);
+				}
+				if($idGrado !== "-1"){
+					$oracion->bindParam(++$bindIndex, $idGrado, PDO::PARAM_INT);
+				}
+				
+						
+			}
+			if($idTipo !== "-1"){
+				$oracion->bindParam(++$bindIndex, $idTipo, PDO::PARAM_INT);
+			}
+			
+			
+			$oracion->bindParam(++$bindIndex, $offset, PDO::PARAM_INT);
 
 			$oracion->execute();									// Ejecutamos la consulta
 
 				$i=0;
-				echo "{";
-				while($fila = $oracion->fetchObject()){				// Generamos el código JSON para enviarlo por AJAX.
-					echo "\"$i\":{";
-					echo '"Id":"'.$fila->IdDocumento.'",';
-					echo '"Titulo":"'.$fila->Titulo.'",';
-					echo '"Nick":"'.$fila->Nick.'",';
-					echo '"IdUsuario":"'.$fila->IdUsuario.'",';
-					echo '"Comentario":"'.$fila->Comentario.'",';
-					echo '"Fecha":"'.$fila->FechaSubida.'",';
-					echo '"Tipo":"'.$fila->Tipo.'",';
-					echo '"Curso":"'.$fila->Anio.'",';
-					echo '"Grado":"'.$fila->Grado.'",';
-					echo '"Documento":"'.$fila->Documento.'",';
-					echo '"Asignatura":"'.$fila->Asignatura.'",';
-					echo '"IdTipo":"'.$fila->IdTipo.'"';
-					echo "},";
+				while(($fila = $oracion->fetchObject())&&$i<10){				// Generamos el código JSON para enviarlo por AJAX.
+					echo $fila->IdDocumento.'|'.$fila->Titulo.'|'.$fila->Nick.'|'.$fila->IdUsuario.'|'.$fila->Comentario.'|'.$fila->FechaSubida.'|'.$fila->Tipo.'|'.$fila->Anio.'|'.$fila->Grado.'|'.$fila->Asignatura.'|'.$fila->IdTipo.'|';
 					$i++;
 
 				}
-				echo "\"length\":".$oracion->rowCount()."}";
-		
+				if($i>=10){ echo "1|";}
+				elseif($i>0){echo "0|";}
+				if($i==0){json_void();}
 	}else{
 		json_void();
 	}
+
+	// Close the connection
+	$DB=null;
 
 }
 
@@ -437,31 +442,30 @@ Función: obtener_ultimos
 function obtener_ultimos(){
 
 	$DB = sql_connect();
-	if($puntero = $DB->query("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio,Documento , Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado, Documentos.Tipo AS IdTipo FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios ORDER BY Documentos.FechaSubida DESC LIMIT 10")){
+	if($puntero = $DB->query("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio,Documento , Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado, Documentos.Tipo AS IdTipo FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.Activo = 1 AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios ORDER BY Documentos.FechaSubida DESC LIMIT 0,10")){
 			$i=0;
-			echo "{";
 				while($fila = $puntero->fetchObject()){
-					echo "\"$i\":{";
-					echo '"Id":"'.$fila->IdDocumento.'",';
-					echo '"Titulo":"'.$fila->Titulo.'",';
-					echo '"Nick":"'.$fila->Nick.'",';
-					echo '"IdUsuario":"'.$fila->IdUsuario.'",';
-					echo '"Comentario":"'.$fila->Comentario.'",';
-					echo '"Fecha":"'.$fila->FechaSubida.'",';
-					echo '"Tipo":"'.$fila->Tipo.'",';
-					echo '"Curso":"'.$fila->Anio.'",';
-					echo '"Grado":"'.$fila->Grado.'",';
-					echo '"Documento":"'.$fila->Documento.'",';
-					echo '"Asignatura":"'.$fila->Asignatura.'",';
-					echo '"IdTipo":"'.$fila->IdTipo.'"';
-					echo "},";
-					$i++;
-
+					echo $fila->IdDocumento.'|'.$fila->Titulo.'|'.$fila->Nick.'|'.$fila->IdUsuario.'|'.$fila->Comentario.'|'.$fila->FechaSubida.'|'.$fila->Tipo.'|'.$fila->Anio.'|'.$fila->Grado.'|'.$fila->Asignatura.'|'.$fila->IdTipo.'|';
+				//	echo '"Id":"'.$fila->IdDocumento.'",';
+				//	echo '"Titulo":"'.$fila->Titulo.'",';
+				//	echo '"Nick":"'.$fila->Nick.'",';
+				//	echo '"IdUsuario":"'.$fila->IdUsuario.'",';
+				//	echo '"Comentario":"'.$fila->Comentario.'",';
+				//	echo '"Fecha":"'.$fila->FechaSubida.'",';
+				//	echo '"Tipo":"'.$fila->Tipo.'",';
+				//	echo '"Curso":"'.$fila->Anio.'",';
+				//	echo '"Grado":"'.$fila->Grado.'",';
+				//	echo '"Documento":"'.$fila->Documento.'",';
+				//	echo '"Asignatura":"'.$fila->Asignatura.'",';
+				//	echo '"IdTipo":"'.$fila->IdTipo.'"';
+				//	echo "|";
 				}
-				echo "\"length\":".$puntero->rowCount()."}";
 	}else{
 		json_void();
 	}
+
+	// Close the connection
+	$DB=null;
 
 }
 
@@ -471,12 +475,13 @@ Función: informacion_documento
 */
 function informacion_documento(){
 	$DB = sql_connect();
+	//die();
 	if(!isset($_GET["id"])){json_void();}else{
 		$idApuntes = $_GET["id"];
 	
 	
 	
-		if($oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Apuntes, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.IdDocumento=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios")){
+		if($oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Apuntes, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.IdDocumento=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.Activo = 1 AND Documentos.asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios")){
 
 			$oracion->bindParam(1, $idApuntes, PDO::PARAM_INT);
 			$oracion->execute();
@@ -505,11 +510,46 @@ function informacion_documento(){
 			json_void();
 		}
 	}
+	// Close connection
+	$DB=null;
 
 }
 
 
+/**
+Generar una invitación de registro
+*/
 
+function generar_invitacion(){
+	$DB = sql_connect();
+	$nId=1;
+	if($oracion = $DB->query("SELECT MAX(IdCodigo)+1 AS n FROM Invitacion")){
+		if($fila = $oracion->fetchObject()){
+			$nId=$fila->n;
+		}
+	}
+	if($nId==""){$nId=0;}
+
+	if($oracion = $DB->prepare("INSERT INTO Invitacion (IdCodigo, Codigo, IdUsuario)VALUES(?, ?, ?)")){
+
+		$idUsuario=idUsuario();
+		$passPhrase= generarCodigoSecreto($idUsuario.(date("miYsdH")));
+		$oracion->bindParam(1, $nId, PDO::PARAM_INT);
+		$oracion->bindParam(2, $passPhrase, PDO::PARAM_STR);
+		$oracion->bindParam(3, $idUsuario, PDO::PARAM_INT);
+		if($oracion->execute()){
+			echo $passPhrase;
+		}else{
+			echo "0";
+
+		}
+
+		
+	}else{
+		echo "0";
+	}
+	$DB=null;
+}
 
 /**
 Enviar información de un error.
@@ -522,7 +562,7 @@ function json_error($id_error, $msg_error){
 Enviar información vacía.
 */
 function json_void(){
-		echo "{ \"length\": 0}";
+		echo "0";
 }
 
 if(isset($_GET["func"])){ 
@@ -550,14 +590,21 @@ if(isset($_GET["func"])){
 			obtener_cursos();
 		break;
 
+		case "anios":
+			obtener_anios();
+		break;
+
 		case "documento":
-			informacion_documento();
+			//informacion_documento();
 		break;
 		case "filtrar_apuntes":
 			filtrar_apuntes();
 		break;
 		case "ultimos":
 			obtener_ultimos();
+		break;
+		case "invitacion":
+			generar_invitacion();
 		break;
 		default:
 			json_void();

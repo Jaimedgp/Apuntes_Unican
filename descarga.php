@@ -7,7 +7,7 @@ require_once("configuracion.php");
 
 require_once("utiles.php");
 require_once("sesion.php");
-
+sleep(2);
 if(haEntrado()){
 	if(!isset($_GET["id"])){ exit(); } // Comprobamos si se ha pasado un identificador
 
@@ -16,7 +16,7 @@ if(haEntrado()){
 	if(!is_nan($idApuntes)){ // Comprobamos si el identificador es un número por seguridad...
 
 		$DB = sql_connect();
-		if($oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.IdDocumento=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.Asignatura = Asignatura.IdAsignatura AND Asignatura.Estudios = Estudios.IdEstudios")){
+		if($oracion = $DB->prepare("SELECT DISTINCT Documentos.IdDocumento, Documentos.Titulo, Usuario.Nick AS Nick, Documentos.FechaSubida, Tipo.Nombre AS Tipo, Anio.Anio, Documento, Asignatura.Nombre AS Asignatura, Documentos.Comentario, Documentos.Usuario AS IdUsuario, Estudios.Nombre AS Grado FROM Documentos, Tipo, Usuario, Anio, Asignatura, Estudios WHERE Documentos.IdDocumento=? AND Documentos.Usuario = Usuario.IdUsuario AND Anio.IdAnio = Documentos.Anio AND Tipo.IdTipo = Documentos.Tipo AND Documentos.Asignatura = Asignatura.IdAsignatura AND Documentos.Activo = 1 AND Asignatura.Estudios = Estudios.IdEstudios")){
 			
 			$oracion->bindParam(1, $idApuntes, PDO::PARAM_INT);
 			if($oracion->execute()){

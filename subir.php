@@ -20,18 +20,20 @@ if(haEntrado()){
 	<title><?php echo NOMBRE; ?></title>
 	<style type="text/css">
 		body {
-			background:#EEEEFF;
+			background:#8698A8;
+			overflow: hidden;
 			font-family:Arial;
-			font-size:16px;
 		}
+
 		#header {
 			position:absolute;
 			top:0px;
 			left:0px;
 			right:0px;
 			height:50px;
-			background:#FFFFFF;
-			border-bottom:1px solid #CCCCCC;
+			color:#FFF;
+			background:#293440;
+			border-bottom:1px solid #000;
 
 		}
 
@@ -42,7 +44,6 @@ if(haEntrado()){
 			bottom:5px;
 			width:auto;
 			min-width:50px;
-			color:#101020;
 		}
 
 		#header_center {
@@ -51,23 +52,22 @@ if(haEntrado()){
 			font-size:24px;
 			width:auto;
 			min-width:50px;
-			color:#101020;
 		}
 
 
 		#canvas {
 			position:absolute;
-
 			display: table;
 			width:100%;
 			height:100%;
-
+			overflow:hidden;
 			
 		}
 
 		#info {
 			display: table-cell;
 			vertical-align: middle;
+			
 
 		}
 
@@ -79,6 +79,8 @@ if(haEntrado()){
 			margin-top:-50px;
 			padding:20px 20px 20px 20px;
 			min-width:300px;
+			border-radius: 5px 5px 5px 5px;
+			font-size:20px;
 		}
 
 		#comentario {
@@ -232,10 +234,10 @@ if(haEntrado()){
 					}
 					
 					// Obtenemos un nuevo id para el documento:
-					$consulta = $DB->query("SELECT COUNT(*) AS num FROM Documentos");
+					$consulta = $DB->query("SELECT MAX(IdDocumento) AS num FROM Documentos");
 					if($consulta->execute()){
 						$objeto = $consulta->fetchObject();
-						$nuevoId = $objeto->num;
+						$nuevoId = intval($objeto->num)+1;
 					}else{
 						$infoSubida="Error grave. Error: 1.";
 						$conError = true;
@@ -244,8 +246,8 @@ if(haEntrado()){
 					/* Si todo ha ido correctamente, escribimos en la base de datos */
 
 					$idUsuario = idUsuario();
-					$oracionSQL = "INSERT INTO Documentos (`IdDocumento`, `Titulo`, `Usuario`, `Tipo`, `Anio`, `Documento`, `Hash`, `Asignatura`, `Comentario` )";
-					$oracionSQL .= " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+					$oracionSQL = "INSERT INTO Documentos (`IdDocumento`, `Titulo`, `Usuario`, `Tipo`, `Anio`, `Documento`, `Hash`, `Asignatura`, `Comentario`, `Activo` )";
+					$oracionSQL .= " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
 
 					// Si hasta ahora no hay errores...
 					if(!$conError){
@@ -266,7 +268,7 @@ if(haEntrado()){
 
 								$infoSubida= "Hubo un error al subir el archivo...
 								Si éste error persiste, p&oacute;ngase en contacto con el administrador. Error:K_";
-								//print_r($oracion->errorInfo());
+								print_r($oracion->errorInfo());
 								$conError = true;
 
 								//Borramos el fichero...
@@ -347,53 +349,31 @@ if(haEntrado()){
 
 	?>
 			<script languaje="JavaScript">
-			/**
-			AJAX
-			**/
-			function ajaxpost( url,  postsend,  callback){
-				var xhttp = new XMLHttpRequest();
-				xhttp.open("POST", url, true);
-				xhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-				xhttp.send(postsend);
+
+			function ajaxpost( x,  y,z){
+				var v = new XMLHttpRequest();
+				v.open("POST", x, true);
+				v.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+				v.send(y);
 				xhttp.onreadystatechange = function(){
-					if(xhttp.readyState == 4 && xhttp.status == 200){
-						callback(xhttp);
+					if(v.readyState == 4&&v.status == 200){
+						z(v.responseText);
 					}
 				}
 			}
 
-			function ajaxget( url,  callback){
-				var xhttp = new XMLHttpRequest();
-				xhttp.open("GET", url, true);
-				xhttp.send();
-				xhttp.onreadystatechange = function(){
-					if(xhttp.readyState == 4 && xhttp.status == 200){
-						callback(xhttp);
+			function ajaxget( x,y){
+				var v = new XMLHttpRequest();
+				v.open("GET", x, true);
+				v.send();
+				v.onreadystatechange = function(){
+					if(v.readyState == 4 && v.status == 200){
+						y(v.responseText);
 					}
 				}
 			}
 
-			function getUrlHash(){
-				var hash = location.hash.substring(1).split("&");
-				var hashObj = {};
-				var hashSplitted;
-				
-				for(var i = 0; i<hash.length; i++){
 
-					hashSplitted = hash[i].split("=");
-					hashObj[hashSplitted[0]] = hashSplitted[1];
-				}
-				return hashObj;
-			}
-
-			function addUrlHash(name, data){
-				var hashObj = getUrlHash();
-				for(var i = 0; i<hash.length; i++){
-
-					hashSplitted = hash[i].split("=");
-					hashObj[hashSplitted[0]] = hashSplitted[1];
-				}
-			}
 				window.onload = function(){
 
 					document.getElementById("grado").addEventListener("change",
@@ -418,20 +398,14 @@ if(haEntrado()){
 					cargarAsignaturas("ALL","ALL");
 				}
 				function cargarGrados(){
-					ajaxget( "becario.php?func=grados",
-						function(xhttp){
+					ajaxget("becario.php?func=grados",
+						function(v){
 							
-							var dataJSON = JSON.parse(xhttp.responseText);
-							console.log(dataJSON.length);
+							var i,y,x=v.split("\|");
+							y=x.length-1;
 							document.getElementById("grado").innerHTML='<option value="NINGUNO">---</option>';
-							var nombre;
-							for(var i = 0; i<dataJSON.length;i++){
-								if(dataJSON[i].Nombre.length>20){
-									nombre = dataJSON[i].Nombre.substring(0,17)+"...";
-								}else{
-									nombre = dataJSON[i].Nombre;
-								}
-								document.getElementById("grado").innerHTML+="<option value=\""+i+"\">"+nombre+"</option>";
+							for(i=0;i<y;i+=2){
+								document.getElementById("grado").innerHTML+="<option value=\""+x[i]+"\">"+(x[i+1].length>20?x[i+1].substring(0,17)+"...":x[i+1])+"</option>";
 							}
 						}
 					);
@@ -442,13 +416,12 @@ if(haEntrado()){
 					document.getElementById("curso_academico").innerHTML='<option value="NINGUNO">---</option>';
 
 					ajaxget( "becario.php?func=cursos",
-						function(xhttp){
-							var dataJSON = JSON.parse(xhttp.responseText);
-							console.log(dataJSON.length);
+					function(v){
+						var i,y,x=v.split("\|");
+							y=x.length-1;
 							document.getElementById("curso_academico").innerHTML='<option value="NINGUNO">---</option>';
-							var nombre;
-							for(var i = 0; i<dataJSON.length;i++){
-								document.getElementById("curso_academico").innerHTML+="<option value=\""+i+"\">"+dataJSON[i]+"</option>";
+							for(i=0;i<y;i+=2){
+								document.getElementById("curso_academico").innerHTML+="<option value=\""+x[i]+"\">"+(x[i+1].length>20?x[i+1].substring(0,17)+"...":x[i+1])+"</option>";
 							}
 						}
 					);
@@ -459,10 +432,11 @@ if(haEntrado()){
 				function cargarTipos(){
 
 					ajaxget( "becario.php?func=tipos",
-						function(xhttp){
-							var dataJSON = JSON.parse(xhttp.responseText);
-							for(var i = 0; i<dataJSON.length;i++){
-								document.getElementById("tipo").innerHTML+="<option value=\""+i+"\">"+dataJSON[i]+"</option>";
+						function(v){
+							var i,y,x=v.split("\|");
+							y=x.length-1;
+							for(i=0;i<y;i+=2){
+								document.getElementById("tipo").innerHTML+="<option value=\""+x[i]+"\">"+(x[i+1].length>20?x[i+1].substring(0,17)+"...":x[i+1])+"</option>";
 							}
 						}
 					);
@@ -483,20 +457,16 @@ if(haEntrado()){
 
 				function cargarAsignaturas(grado, curso){
 					ajaxget( "becario.php?func=asignaturas&grado="+grado+"&curso="+curso,
-						function(xhttp){
-							
-							var dataJSON = JSON.parse(xhttp.responseText);
-							console.log(dataJSON);
+						function(v){
+						var i,y,x=v.split("\|");
+							y=x.length-1;
 							document.getElementById("asignatura").innerHTML='<option value="NINGUNO">---</option>';
-							for(var i = 0; i<dataJSON.length;i++){
-								if(dataJSON[i].Nombre.length>20){
-									nombre = dataJSON[i].Nombre.substring(0,17)+"...";
-								}else{
-									nombre = dataJSON[i].Nombre;
-								}
-								document.getElementById("asignatura").innerHTML+="<option value=\""+dataJSON[i].id+"\">"+nombre+"</option>";
+							for(i=0;i<y;i+=2){
+								document.getElementById("asignatura").innerHTML+="<option value=\""+x[i]+"\">"+(x[i+1].length>20?x[i+1].substring(0,17)+"...":x[i+1])+"</option>";
 							}
 						}
+
+	
 					);
 				}
 
